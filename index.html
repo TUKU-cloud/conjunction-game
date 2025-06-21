@@ -242,6 +242,7 @@
 
     const quizData = shuffle([...fullQuizData]).slice(0, 10);
     let current = 0;
+    let quizStartTime; // ← クイズ全体の開始時間を記録
     let correctCount = 0;
     let solveTimes = []; 
     let playerAnswers = [];
@@ -253,6 +254,7 @@
 
 
     function loadQuestion() {
+      if (current === 0) quizStartTime = Date.now(); // ← 初回だけ全体の開始時間を記録
       startTime = Date.now();
       const quiz = quizData[current];
       questionBox.textContent = `(${current + 1}/${quizData.length}) ${quiz.sentence}`;
@@ -292,38 +294,38 @@
        const endTime = performance.now();
        const timeTaken = (endTime - startTime) / 1000; // 秒に変換
        solveTimes.push(timeTaken);
+button.addEventListener("animationend", () => {
+  const mark = document.createElement("div");
+  mark.textContent = isCorrect ? "○" : "×";
+  mark.className = "feedback-mark";
+  mark.style.color = isCorrect ? "green" : "red";
+  mark.style.left = button.offsetLeft + button.offsetWidth / 2 + "px";
+  mark.style.top = button.offsetTop + button.offsetHeight / 2 + "px";
+  doorsBox.appendChild(mark);
 
-      button.addEventListener("animationend", () => {
-        const mark = document.createElement("div");
-        mark.textContent = isCorrect ? "○" : "×";
-        mark.className = "feedback-mark";
-        mark.style.color = isCorrect ? "green" : "red";
-        mark.style.left = button.offsetLeft + button.offsetWidth / 2 + "px";
-        mark.style.top = button.offsetTop + button.offsetHeight / 2 + "px";
-        doorsBox.appendChild(mark);
-
-        if (isCorrect) {
-          setTimeout(nextStep, 1000);
-        } else {
-          feedbackBox.textContent = "正解は…";
-          setTimeout(() => {
-            feedbackBox.textContent = "";
-            buttons.forEach(btn => {
-              if (btn.textContent === correct) {
-                const frame = document.createElement("div");
-                frame.className = "correct-frame";
-                frame.style.width = btn.offsetWidth + "px";
-                frame.style.height = btn.offsetHeight + "px";
-                frame.style.left = btn.offsetLeft + "px";
-frame.style.top = btn.offsetTop + "px";
-
-                doorsBox.appendChild(frame);
-              }
-            });
-            setTimeout(nextStep, 2000);
-          }, 2000);
+  if (isCorrect) {
+    setTimeout(nextStep, 1000);
+  } else {
+    feedbackBox.textContent = "正解は…";
+    setTimeout(() => {
+      feedbackBox.textContent = "";
+      buttons.forEach(btn => {
+        if (btn.textContent === correct) {
+          const frame = document.createElement("div");
+          frame.className = "correct-frame";
+          frame.style.width = btn.offsetWidth + "px";
+          frame.style.height = btn.offsetHeight + "px";
+          frame.style.left = btn.offsetLeft + "px";
+          frame.style.top = btn.offsetTop + "px";
+          doorsBox.appendChild(frame);
         }
-      }, { once: true });
+      });
+      setTimeout(nextStep, 2000);
+    }, 2000);
+  }
+}, { once: true });
+
+      
     }
 
     function nextStep() {
@@ -435,19 +437,7 @@ document.getElementById("retryButton").onclick = () => {
 
       resultBox.appendChild(table);
 
-   // 🔒 隠しエンディングの判定（全問正解＆全問4秒以内）
-   const allCorrect = correctCount === quizData.length;
-   const allQuick = solveTimes.every(t => t <= 4);
-
-   if (allCorrect && allQuick) {
-  resultBox.insertAdjacentHTML("afterbegin", `
-    <div style="color: mediumvioletred; font-size: 1.4em; margin-bottom: 10px;">
-      🎉🎉 かくしエンディング 🎉🎉<br>
-      あなたは ことばマスター！すごすぎる！
-    </div>
-  `);
-  resultBox.style.animation = "glow 1.5s infinite alternate";
-}
+  
 
   } // ← nextStep() の閉じカッコ
     }
